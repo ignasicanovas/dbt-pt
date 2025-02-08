@@ -1,0 +1,70 @@
+version: 2
+
+sources:
+  - name: corporate 
+    description: "Datos transformados en la capa corporate"
+    schema: corporate
+    tables:
+      - name: corp_tpch_orders
+        description: "Órdenes procesadas con cálculos de negocio"
+      - name: corp_tpch_customer
+        description: "Clientes con datos normalizados"
+      - name: corp_tpch_lineitem
+        description: "Detalles de las órdenes"
+      - name: corp_tpch_part
+        description: "Información de productos"
+      - name: corp_tpch_supplier
+        description: "Proveedores con datos normalizados"
+
+models:
+  - name: dtm_country_fact_orders
+    description: "Tabla de hechos con pedidos de productos vendidos por suppliers de Argentina"
+    columns:
+      - name: order_item_key
+        description: "Clave única de la orden"
+      - name: customer_key
+        description: "Clave del cliente que realizó la compra"
+      - name: order_date
+        description: "Fecha en la que se realizó la orden"
+      - name: total_amount
+        description: "Monto total de la orden"
+      - name: total_quantity
+        description: "Cantidad total de productos en la orden"
+      - name: supplier_key
+        description: "Clave del proveedor que vendió el producto"
+      - name: part_key
+        description: "Clave del producto vendido"
+
+  - name: dtm_country_dim_customer
+    description: "Dimensión de clientes que compraron productos a suppliers de Argentina"
+    columns:
+      - name: customer_key
+        description: "Clave única del cliente"
+      - name: full_name
+        description: "Nombre completo del cliente"
+      - name: nation_key
+        description: "Clave del país del cliente"
+
+  - name: dtm_country_dim_product
+    description: "Dimensión de productos vendidos por suppliers de Argentina"
+    columns:
+      - name: part_key
+        description: "Clave única del producto"
+      - name: part_name
+        description: "Nombre del producto"
+      - name: manufacturer
+        description: "Nombre del fabricante"
+      - name: brand
+        description: "Marca del producto"
+      - name: part_type
+        description: "Tipo de producto"
+
+  - name: dtm_country_dim_supplier
+    description: "Dimensión de suppliers de Argentina"
+    columns:
+      - name: supplier_key
+        description: "Clave única del proveedor"
+      - name: supplier_name
+        description: "Nombre del proveedor"
+      - name: nation_key
+        description: "Clave del país del proveedor"

@@ -1,0 +1,193 @@
+version: 2
+
+sources:
+  - name: tpch
+    description: "Fuente de datos TPCH desde Snowflake Sample Data"
+    database: SNOWFLAKE_SAMPLE_DATA
+    schema: TPCH_SF1
+    tables:
+      - name: customer
+        description: "Clientes de la base de datos TPCH"
+      - name: orders
+        description: "Órdenes de compra en TPCH"
+      - name: lineitem
+        description: "Detalles de cada orden"
+      - name: part
+        description: "Productos o partes vendidas"
+      - name: supplier
+        description: "Proveedores de partes"
+      - name: nation
+        description: "Naciones en TPCH"
+      - name: region
+        description: "Regiones en TPCH"
+      - name: partsupp
+        description: "Relación entre partes y proveedores"
+
+models:
+  - name: stg_tpch_customer
+    description: "Tabla staging de clientes basada en TPCH_SF1.CUSTOMER"
+    columns:
+      - name: customer_key
+        tests:
+          - unique
+          - not_null
+      - name: full_name
+        tests:
+          - not_null
+      - name: nation_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tpch_nation')
+              field: nation_key
+      - name: phone
+        tests:
+          - not_null
+      - name: account_balance
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: -10000
+              max_value: 100000
+      - name: marketing_segment
+        tests:
+          - accepted_values:
+              values: ['AUTOMOBILE', 'BUILDING', 'FURNITURE', 'HOUSEHOLD', 'MACHINERY']
+
+  - name: stg_tpch_orders
+    description: "Tabla staging de órdenes"
+    columns:
+      - name: order_key
+        tests:
+          - unique
+          - not_null
+      - name: customer_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tpch_customer')
+              field: customer_key
+      - name: order_status
+        tests:
+          - accepted_values:
+              values: ['O', 'F', 'P']  
+      - name: total_price
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 1000000
+      - name: order_date
+        tests:
+          - not_null
+
+  - name: stg_tpch_lineitem
+    description: "Detalles de cada ítem dentro de una orden"
+    columns:
+      - name: order_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tpch_orders')
+              field: order_key
+      - name: part_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tpch_part')
+              field: part_key
+      - name: supplier_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tpch_supplier')
+              field: supplier_key
+      - name: quantity
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between::
+              min_value: 1
+              max_value: 1000
+      - name: extended_price
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between::
+              min_value: 0
+              max_value: 1000000
+      - name: discount
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between::
+              min_value: 0
+              max_value: 0.5
+      - name: tax
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between::
+              min_value: 0
+              max_value: 0.2
+      - name: ship_date
+        tests:
+          - not_null
+
+  - name: stg_tpch_part
+    description: "Tabla de partes (productos)"
+    columns:
+      - name: part_key
+        tests:
+          - unique
+          - not_null
+      - name: name
+        tests:
+          - not_null
+      - name: retail_price
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between::
+              min_value: 1
+              max_value: 10000
+
+  - name: stg_tpch_supplier
+    description: "Tabla de proveedores"
+    columns:
+      - name: supplier_key
+        tests:
+          - unique
+          - not_null
+      - name: nation_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tpch_nation')
+              field: nation_key
+
+  - name: stg_tpch_nation
+    description: "Tabla de países"
+    columns:
+      - name: nation_key
+        tests:
+          - unique
+          - not_null
+      - name: region_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tpch_region')
+              field: region_key
+
+  - name: stg_tpch_region
+    description: "Tabla de regiones"
+    columns:
+      - name: region_key
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_tpch_partsupp
+    description: "Relación entre partes y proveedores"
+    columns:
+      - name: part_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tpch_part')
+              field: part_key
+      - name: supplier_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_tpch_supplier')
+              field: supplier_key

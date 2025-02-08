@@ -1,0 +1,96 @@
+version: 2
+
+
+sources:
+  - name: staging
+    description: "Vistas limpias de Staging"
+    database: prop_db
+    schema: staging  
+    tables:
+      - name: stg_tpch_customer
+        description: "Vista de clientes en Staging"
+      - name: stg_tpch_orders
+        description: "Vista de órdenes en Staging"
+      - name: stg_tpch_lineitem
+        description: "Vista de líneas de pedido en Staging"
+      - name: stg_tpch_part
+        description: "Vista de partes en Staging"
+      - name: stg_tpch_supplier
+        description: "Vista de proveedores en Staging"
+      - name: stg_tpch_nation
+        description: "Vista de naciones en Staging"
+      - name: stg_tpch_region
+        description: "Vista de regiones en Staging"
+      - name: stg_tpch_partsupp
+        description: "Vista de partes y proveedores en Staging"
+
+models:
+  - name: corp_tpch_customer
+    description: "Clientes con datos limpios y estandarizados"
+    columns:
+      - name: customer_key
+        description: "Identificador único del cliente"
+      - name: full_name
+        description: "Nombre del cliente en formato estandarizado"
+      - name: nation_key
+        description: "Clave de la nación del cliente"
+
+  - name: corp_tpch_orders
+    description: "Órdenes de compra con cálculos de negocio"
+    columns:
+      - name: order_key
+        description: "Identificador único de la orden"
+      - name: tax_vat_21
+        description: "IVA calculado al 21%"
+      - name: total_price_with_vat
+        description: "Total con IVA incluido"
+      - name: tax_vat_21_valid
+        description: "Valida que tax_vat_21 se calcula correctamente"
+        tests:
+          - accepted_values:
+              values: [0]
+              store_failures: true
+              database: prop_db_dev
+              schema: audit
+
+
+
+  - name: corp_tpch_lineitem
+    description: "Detalles de cada línea de pedido con claves generadas"
+    columns:
+      - name: order_item_key
+        description: "Clave surrogate única por línea de pedido"
+        tests: 
+          - unique
+          - not_null
+
+  - name: corp_tpch_supplier
+    description: "Proveedores con datos limpios"
+    columns:
+      - name: supplier_key
+        description: "Identificador único del proveedor"
+  - name: corp_tpch_part
+    description: "Información de productos (partes)"
+    columns:
+      - name: part_key
+        description: "Identificador único del producto"
+      - name: part_name
+        description: "Nombre estandarizado del producto"
+
+  - name: corp_tpch_partsupp
+    description: "Relación entre partes y proveedores con costos y stock"
+    columns:
+      - name: part_key
+        description: "Clave de la parte"
+      - name: supplier_key
+        description: "Clave del proveedor"
+      - name: available_quantity
+        description: "Cantidad disponible en inventario"
+      - name: supply_cost
+        description: "Costo del suministro"
+
+  - name: corp_tpch_nation
+    description: "Datos normalizados de países"
+
+  - name: corp_tpch_region
+    description: "Datos normalizados de regiones"
